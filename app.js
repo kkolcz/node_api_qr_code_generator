@@ -1,7 +1,21 @@
 const express = require('express')
 const qrcode = require('qrcode')
+const { v4: uuidv4 } = require('uuid')
+
 const app = express()
+const address = 'http://localhost:3000'
+const folderName = 'public'
 const port = 3000
+
+app.use(express.static('public'))
+
+const generateFile = value => {
+	const fileName = uuidv4()
+	const imgLink = `${address}/${fileName}.jpg`
+	console.log(`QR Code with the value: ${value}`)
+	qrcode.toFile(`${folderName}/${fileName}.jpg`, value)
+	return imgLink
+}
 
 app.get('/', (req, res) => {
 	res.send(`
@@ -26,7 +40,35 @@ app.get('/qr-base64', async (req, res) => {
 })
 
 app.get('/qr-img', async (req, res) => {
-	res.send(`<p>Not implemented yet</p>`)
+	const value = req.query.value
+	if (value) {
+		const imgLink = generateFile(value)
+		console.log(`QR Code with the value: ${value}`)
+
+		res.send(`
+		<p><img src="${imgLink}" alt="Generated qr code"></p>
+		<p><code>${imgLink}</code></p>
+		<p><a href="${imgLink}">Link to QR Code</a></p>
+		`)
+	} else {
+		console.log(`Invalid request: ${value}`)
+		res.send(`<p>Invalid request</p>`)
+	}
+	//res.send(`<p>Not implemented yet</p>`)
+})
+
+app.get('/qr-img-url', async (req, res) => {
+	const value = req.query.value
+	if (value) {
+		const imgLink = generateFile(value)
+		console.log(`QR Code with the value: ${value}`)
+
+		res.send(JSON.stringify({ url: imgLink }))
+	} else {
+		console.log(`Invalid request: ${value}`)
+		res.send(`<p>Invalid request</p>`)
+	}
+	//res.send(`<p>Not implemented yet</p>`)
 })
 
 app.get('/qr-view', async (req, res) => {
